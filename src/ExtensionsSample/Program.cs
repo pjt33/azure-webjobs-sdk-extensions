@@ -35,6 +35,7 @@ namespace ExtensionsSample
             config.UseSample();
             config.UseMobileApps();
             config.UseTwilioSms();
+            config.UseNotificationHubs();
             config.UseCore();
 
             var sendGridConfiguration = new SendGridConfiguration()
@@ -59,7 +60,8 @@ namespace ExtensionsSample
                 typeof(MiscellaneousSamples),
                 typeof(SampleSamples),
                 typeof(TableSamples),
-                typeof(TimerSamples));
+                typeof(TimerSamples),
+                typeof(NotificationHubSamples));
 
             // Some direct invocations to demonstrate various binding scenarios
             host.Call(typeof(MiscellaneousSamples).GetMethod("ExecutionContext"));

@@ -52,7 +52,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Http
         /// <param name="processRequestHandler"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async Task<HttpResponseMessage> ProcessRequestAsync(HttpRequestMessage request, Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> processRequestHandler, CancellationToken cancellationToken)
+        public virtual async Task<HttpResponseMessage> ProcessRequestAsync(HttpRequestMessage request, Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> processRequestHandler, CancellationToken cancellationToken)
         {
             if (RejectAllRequests())
             {

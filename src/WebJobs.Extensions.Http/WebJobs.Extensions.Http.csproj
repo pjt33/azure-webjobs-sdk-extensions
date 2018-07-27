@@ -6,6 +6,8 @@
     <RootNamespace>Microsoft.Azure.WebJobs.Extensions.Http</RootNamespace>
     <PackageId>Microsoft.Azure.WebJobs.Extensions.Http</PackageId>
     <Description>This package adds binding extensions for Http.</Description>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>testkey.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\WebJobs.Extensions\Framework\Bindings\StreamValueBinder.cs" Link="Binding\StreamValueBinder.cs" />

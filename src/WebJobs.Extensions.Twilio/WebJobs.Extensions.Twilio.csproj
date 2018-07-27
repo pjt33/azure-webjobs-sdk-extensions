@@ -6,6 +6,8 @@
     <RootNamespace>Microsoft.Azure.WebJobs.Extensions.Twilio</RootNamespace>
     <PackageId>Microsoft.Azure.WebJobs.Extensions.Twilio</PackageId>
     <Description>This package contains binding extensions for Twilio.</Description>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>testkey.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

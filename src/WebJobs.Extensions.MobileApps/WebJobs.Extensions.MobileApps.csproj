@@ -6,6 +6,8 @@
     <RootNamespace>Microsoft.Azure.WebJobs.Extensions.MobileApps</RootNamespace>
     <PackageId>Microsoft.Azure.WebJobs.Extensions.MobileApps</PackageId>
     <Description>This package contains binding extensions for Azure Mobile Apps.</Description>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>testkey.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

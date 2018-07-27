@@ -5,6 +5,8 @@
     <IsPackable>false</IsPackable>
     <AssemblyName>Microsoft.Azure.WebJobs.Extensions.Tests</AssemblyName>
     <RootNamespace>Microsoft.Azure.WebJobs.Extensions.Tests</RootNamespace>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>testkey.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

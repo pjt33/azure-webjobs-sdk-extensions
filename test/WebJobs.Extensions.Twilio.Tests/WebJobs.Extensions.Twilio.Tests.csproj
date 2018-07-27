@@ -5,6 +5,8 @@
     <IsPackable>false</IsPackable>
     <AssemblyName>Microsoft.Azure.WebJobs.Extensions.Twilio.Tests</AssemblyName>
     <RootNamespace>Microsoft.Azure.WebJobs.Extensions.Twilio.Tests</RootNamespace>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>testkey.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -6,6 +6,8 @@
     <RootNamespace>Microsoft.Azure.WebJobs.Extensions.SendGrid</RootNamespace>
     <PackageId>Microsoft.Azure.WebJobs.Extensions.SendGrid</PackageId>
     <Description>This package contains SendGrid binding extensions.</Description>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>testkey.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

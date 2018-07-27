@@ -14,6 +14,7 @@ using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Config;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using TestUnsigned;
 
 namespace Microsoft.Azure.WebJobs.Extensions.CosmosDB
 {
@@ -31,6 +32,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDB
         /// </summary>
         public CosmosDBConfiguration()
         {
+            var c = new Class1();
             CosmosDBServiceFactory = new DefaultCosmosDBServiceFactory();
         }
 
@@ -134,6 +136,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.CosmosDB
 
         internal string ResolveConnectionString(string attributeConnectionString)
         {
+            var c = new Class1();
+
             // First, try the Attribute's string.
             if (!string.IsNullOrEmpty(attributeConnectionString))
             {

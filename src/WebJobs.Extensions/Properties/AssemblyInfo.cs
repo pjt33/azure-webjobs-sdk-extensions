@@ -13,3 +13,4 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyFileVersion("2.2.0.0")]
 
 [assembly: InternalsVisibleTo("Microsoft.Azure.WebJobs.Extensions.Tests")]
+[assembly: InternalsVisibleTo("Microsoft.Azure.WebJobs.Extensions.Timers.Tests")]

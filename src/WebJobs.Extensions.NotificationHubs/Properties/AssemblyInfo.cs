@@ -12,5 +12,5 @@ using System.Runtime.CompilerServices;
 // For example, 1.0.0.0 becomes 1.0.1234.0
 [assembly: AssemblyFileVersion("1.2.0.0")]
 
-[assembly: InternalsVisibleTo("Microsoft.Azure.WebJobs.Extensions.Tests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+[assembly: InternalsVisibleTo("Microsoft.Azure.WebJobs.Extensions.NotificationHubs.Tests")]

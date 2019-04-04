@@ -42,37 +42,6 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers
                 "9/16/2015 7:00:00 PM\r\n" +
                 "9/16/2015 8:00:00 PM\r\n";
             Assert.Equal(expected, result);
-
-            timerInfo = new TimerInfo(new DailySchedule("2:00:00"), null);
-            result = timerInfo.FormatNextOccurrences(5, now);
-
-            expected =
-                "The next 5 occurrences of the schedule will be:\r\n" +
-                "9/17/2015 2:00:00 AM\r\n" +
-                "9/18/2015 2:00:00 AM\r\n" +
-                "9/19/2015 2:00:00 AM\r\n" +
-                "9/20/2015 2:00:00 AM\r\n" +
-                "9/21/2015 2:00:00 AM\r\n";
-            Assert.Equal(expected, result);
-
-            WeeklySchedule weeklySchedule = new WeeklySchedule();
-            weeklySchedule.Add(DayOfWeek.Monday, new TimeSpan(8, 0, 0));
-            weeklySchedule.Add(DayOfWeek.Wednesday, new TimeSpan(9, 30, 0));
-            weeklySchedule.Add(DayOfWeek.Wednesday, new TimeSpan(21, 30, 0));
-            weeklySchedule.Add(DayOfWeek.Friday, new TimeSpan(10, 0, 0));
-
-            timerInfo = new TimerInfo(weeklySchedule, null);
-            
-            result = timerInfo.FormatNextOccurrences(5, now);
-
-            expected =
-                "The next 5 occurrences of the schedule will be:\r\n" +
-                "9/16/2015 9:30:00 PM\r\n" +
-                "9/18/2015 10:00:00 AM\r\n" +
-                "9/21/2015 8:00:00 AM\r\n" +
-                "9/23/2015 9:30:00 AM\r\n" +
-                "9/23/2015 9:30:00 PM\r\n";
-            Assert.Equal(expected, result);
         }
     }
 }

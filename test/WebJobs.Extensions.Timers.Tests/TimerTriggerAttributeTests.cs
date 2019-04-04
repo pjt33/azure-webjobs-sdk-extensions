@@ -20,9 +20,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers
         [Fact]
         public void Constructor_ScheduleType()
         {
-            TimerTriggerAttribute attribute = new TimerTriggerAttribute(typeof(DailySchedule));
+            TimerTriggerAttribute attribute = new TimerTriggerAttribute(typeof(TimerSchedule));
             Assert.Null(attribute.ScheduleExpression);
-            Assert.Equal(typeof(DailySchedule), attribute.ScheduleType);
+            Assert.Equal(typeof(TimerSchedule), attribute.ScheduleType);
             Assert.True(attribute.UseMonitor);
         }
     }

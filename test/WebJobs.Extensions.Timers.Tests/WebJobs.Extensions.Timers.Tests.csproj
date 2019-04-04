@@ -97,9 +97,7 @@
     <Compile Include="Scheduling\TimerScheduleTests.cs" />
     <Compile Include="Scheduling\ConstantScheduleTests.cs" />
     <Compile Include="Scheduling\CronScheduleTests.cs" />
-    <Compile Include="Scheduling\DailyScheduleTests.cs" />
     <Compile Include="Scheduling\FileSystemScheduleMonitorTests.cs" />
-    <Compile Include="Scheduling\WeeklyScheduleTests.cs" />
     <Compile Include="Listener\TimerListenerTests.cs" />
     <Compile Include="TimerInfoTests.cs" />
     <Compile Include="TimerTriggerEndToEndTests.cs" />

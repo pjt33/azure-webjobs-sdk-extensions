@@ -215,11 +215,9 @@
     <Compile Include="Extensions\Timers\Listener\TimerListener.cs" />
     <Compile Include="Extensions\Timers\Scheduling\ConstantSchedule.cs" />
     <Compile Include="Extensions\Timers\Scheduling\CronSchedule.cs" />
-    <Compile Include="Extensions\Timers\Scheduling\DailySchedule.cs" />
     <Compile Include="Extensions\Timers\Scheduling\FileSystemScheduleMonitor.cs" />
     <Compile Include="Extensions\Timers\Scheduling\ScheduleMonitor.cs" />
     <Compile Include="Extensions\Timers\Scheduling\TimerSchedule.cs" />
-    <Compile Include="Extensions\Timers\Scheduling\WeeklySchedule.cs" />
     <Compile Include="Extensions\Timers\TimerInfo.cs" />
     <Compile Include="Extensions\Timers\TimerTriggerAttribute.cs" />
     <Compile Include="Extensions\Timers\Bindings\TimerTriggerAttributeBindingProvider.cs" />

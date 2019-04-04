@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using Microsoft.Azure.WebJobs.Extensions.Timers;
 
@@ -17,15 +18,22 @@ namespace Microsoft.Azure.WebJobs
         /// <summary>
         /// Constructs a new instance
         /// </summary>
+        /// <param name="tz">The timezone in which the timer operates.</param>
         /// <param name="schedule">The timer trigger schedule.</param>
         /// <param name="status">The current schedule status.</param>
         /// <param name="isPastDue">True if the schedule is past due, false otherwise.</param>
-        public TimerInfo(TimerSchedule schedule, ScheduleStatus status, bool isPastDue = false)
+        public TimerInfo(TimeZoneInfo tz, TimerSchedule schedule, ScheduleStatus status, bool isPastDue = false)
         {
+            TimeZone = tz;
             Schedule = schedule;
             ScheduleStatus = status;
             IsPastDue = isPastDue;
         }
+
+        /// <summary>
+        /// Gets the timezone in which this timer operates.
+        /// </summary>
+        public TimeZoneInfo TimeZone { get; private set; }
 
         /// <summary>
         /// Gets the schedule for the timer trigger.
@@ -50,24 +58,26 @@ namespace Microsoft.Azure.WebJobs
         /// easily loggable string.
         /// </summary>
         /// <param name="count">The number of occurrences to format.</param>
-        /// <param name="now">The optional <see cref="DateTime"/> to start from.</param>
+        /// <param name="nowUtc">The <see cref="DateTime"/> to start from.</param>
         /// <returns>A formatted string with the next occurrences.</returns>
-        public string FormatNextOccurrences(int count, DateTime? now = null)
+        public string FormatNextOccurrences(int count, DateTime nowUtc)
         {
-            return FormatNextOccurrences(Schedule, count, now);
+            return FormatNextOccurrences(Schedule, count, nowUtc, TimeZone);
         }
 
-        internal static string FormatNextOccurrences(TimerSchedule schedule, int count, DateTime? now = null)
+        internal static string FormatNextOccurrences(TimerSchedule schedule, int count, DateTime nowUtc, TimeZoneInfo tz)
         {
+            Debug.Assert(nowUtc.Kind == DateTimeKind.Utc);
+
             if (schedule == null)
             {
                 throw new ArgumentNullException("schedule");
             }
 
-            IEnumerable<DateTime> nextOccurrences = schedule.GetNextOccurrences(count, now);
+            IEnumerable<DateTime> nextOccurrences = schedule.GetNextOccurrences(count, nowUtc, tz);
             StringBuilder builder = new StringBuilder();
             builder.AppendLine(string.Format("The next {0} occurrences of the schedule will be:", count));
-            foreach (DateTime occurrence in nextOccurrences)
+            foreach (var occurrence in nextOccurrences)
             {
                 builder.AppendLine(occurrence.ToString());
             }

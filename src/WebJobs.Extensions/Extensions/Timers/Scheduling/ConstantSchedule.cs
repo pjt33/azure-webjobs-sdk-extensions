@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
 
 namespace Microsoft.Azure.WebJobs.Extensions.Timers
@@ -24,13 +25,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.Timers
         }
 
         /// <inheritdoc/>
-        // We always want to run these based on the configured interval. We don't want to adjust
-        // based on whether the next time falls across a DST boundary.
-        public override bool AdjustForDST => false;
-
-        /// <inheritdoc/>
-        public override DateTime GetNextOccurrence(DateTime now)
+        public override DateTime GetNextOccurrence(DateTime nowUtc, TimeZoneInfo tz)
         {
+            Debug.Assert(nowUtc.Kind == DateTimeKind.Utc);
+
             TimeSpan nextInterval = _interval;
             if (_intervalOverride != null)
             {
@@ -38,7 +36,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Timers
                 _intervalOverride = null;
             }
 
-            return now + nextInterval;
+            return nowUtc + nextInterval;
         }
 
         /// <summary>

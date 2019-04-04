@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.Azure.WebJobs.Host;
 
@@ -15,42 +16,37 @@ namespace Microsoft.Azure.WebJobs.Extensions.Timers
     public abstract class TimerSchedule
     {
         /// <summary>
-        /// Gets a value indicating whether intervals between invocations should account for DST.        
-        /// </summary>
-        public abstract bool AdjustForDST { get; }
-
-        /// <summary>
         /// Gets the next occurrence of the schedule based on the specified
         /// base time.
         /// </summary>
-        /// <param name="now">The time to compute the next schedule occurrence from.</param>
+        /// <param name="nowUtc">The time to compute the next schedule occurrence from.</param>
+        /// <param name="tz">The timezone in which the schedule is executing.</param>
         /// <returns>The next schedule occurrence.</returns>
-        public abstract DateTime GetNextOccurrence(DateTime now);
+        public abstract DateTime GetNextOccurrence(DateTime nowUtc, TimeZoneInfo tz);
 
         /// <summary>
         /// Returns a collection of the next 'count' occurrences of the schedule,
-        /// starting from now.
+        /// starting from nowUtc.
         /// </summary>
         /// <param name="count">The number of occurrences to return.</param>
+        /// <param name="nowUtc">The <see cref="DateTime"/> to start from.</param>
+        /// <param name="tz">The timezone in which the schedule is executing.</param>
         /// <returns>A collection of the next occurrences.</returns>
-        /// <param name="now">The optional <see cref="DateTime"/> to start from.</param>
-        public IEnumerable<DateTime> GetNextOccurrences(int count, DateTime? now = null)
+        public IEnumerable<DateTime> GetNextOccurrences(int count, DateTime nowUtc, TimeZoneInfo tz)
         {
+            Debug.Assert(nowUtc.Kind == DateTimeKind.Utc);
+
             if (count < 0)
             {
                 throw new ArgumentOutOfRangeException("count");
             }
 
-            if (now == null)
-            {
-                now = DateTime.Now;
-            }
-            List<DateTime> occurrences = new List<DateTime>();
+            var occurrences = new List<DateTime>();
             for (int i = 0; i < count; i++)
             {
-                DateTime next = GetNextOccurrence(now.Value);
+                DateTime next = GetNextOccurrence(nowUtc, tz);
                 occurrences.Add(next);
-                now = next;
+                nowUtc = next;
             }
 
             return occurrences;
@@ -67,8 +63,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.Timers
                 {
                     schedule = cronSchedule;
 
-                    DateTime[] nextOccurrences = cronSchedule.InnerSchedule.GetNextOccurrences(DateTime.Now, DateTime.Now + TimeSpan.FromMinutes(1)).ToArray();
-                    if (nextOccurrences.Length > 1)
+                    var nowUtc = DateTime.UtcNow;
+                    var secondOccurrence = cronSchedule.GetNextOccurrences(2, nowUtc, TimeZoneInfo.Utc).Last();
+                    if (secondOccurrence < nowUtc + TimeSpan.FromMinutes(1))
                     {
                         // if there is more than one occurrence due in the next minute,
                         // assume that this is a sub-minute constant schedule and disable

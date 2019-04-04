@@ -57,6 +57,12 @@ namespace Microsoft.Azure.WebJobs
                     throw new ArgumentNullException("context");
                 }
 
+                if (_config.TimeZone == null)
+                {
+                    // For backwards compatibility, the fallback timezone must be Local.
+                    _config.TimeZone = TimeZoneInfo.Local;
+                }
+
                 if (_config.ScheduleMonitor == null)
                 {
                     _config.ScheduleMonitor = new StorageScheduleMonitor(context.Config, context.Trace);

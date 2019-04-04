@@ -69,6 +69,7 @@
       <Word>DocumentDB</Word>
       <Word>AccountEndpoint</Word>
       <Word>AccountKey</Word>
+      <Word>tz</Word>
     </Recognized>
     <Deprecated/>
     <Compound>

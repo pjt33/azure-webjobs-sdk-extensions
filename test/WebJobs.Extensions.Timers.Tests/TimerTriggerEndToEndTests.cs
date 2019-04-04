@@ -13,6 +13,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers
     [Trait("Category", "E2E")]
     public class TimerTriggerEndToEndTests
     {
+        private static readonly TimeZoneInfo _timezonePacific = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+
         [Fact]
         public async Task CronScheduleJobTest()
         {
@@ -108,7 +110,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers
                 Assert.NotNull(timer.Schedule);
 
                 Assert.NotNull(timer.ScheduleStatus);
-                DateTime expectedNext = timer.Schedule.GetNextOccurrence(timer.ScheduleStatus.Last);
+                DateTime expectedNext = timer.Schedule.GetNextOccurrence(timer.ScheduleStatus.Last, _timezonePacific);
                 Assert.Equal(expectedNext, timer.ScheduleStatus.Next);
 
                 InvocationCount++;
@@ -155,12 +157,10 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers
 
                 public static int InvocationCount { get; set; }
 
-                public override bool AdjustForDST => true;
-
-                public override DateTime GetNextOccurrence(DateTime now)
+                public override DateTime GetNextOccurrence(DateTime nowUtc, TimeZoneInfo tz)
                 {
                     InvocationCount++;
-                    return now + TimeSpan.FromSeconds(2);
+                    return nowUtc + TimeSpan.FromSeconds(2);
                 }
             }
         }

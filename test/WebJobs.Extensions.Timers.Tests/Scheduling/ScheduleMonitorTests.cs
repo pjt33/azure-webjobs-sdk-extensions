@@ -12,10 +12,11 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Scheduling
     public class ScheduleMonitorTests
     {
         private const string _timerName = "TestTimer";
+        private static readonly TimeZoneInfo _timezonePacific = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+        private static readonly IFormatProvider en_US = CultureInfo.GetCultureInfo("en-US");
         private readonly CronSchedule _hourlySchedule;
         private readonly CronSchedule _halfHourlySchedule;
         private readonly CronSchedule _dailySchedule;
-        private readonly IFormatProvider EN_US = CultureInfo.GetCultureInfo("en-US");
 
         public ScheduleMonitorTests()
         {
@@ -24,16 +25,24 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Scheduling
             _dailySchedule = new CronSchedule("0 0 0 * * *");
         }
 
+        private static DateTime ParseDateTime(string str)
+        {
+            // The tests were originally designed to execute in a certain timezone and culture,
+            // so we force these locale items to make the tests work consistently regardless
+            // of the execution environment.
+            return TimeZoneInfo.ConvertTimeToUtc(DateTime.Parse(str, en_US), _timezonePacific);
+        }
+
         [Fact]
         public async Task CheckPastDue_NullStatus()
         {
-            DateTime now = DateTime.Parse("1/1/2017 9:35", EN_US);
+            DateTime now = ParseDateTime("1/1/2017 9:35");
             MockScheduleMonitor monitor = new MockScheduleMonitor();
 
-            TimeSpan pastDueAmount = await monitor.CheckPastDueAsync(_timerName, now, _dailySchedule, null);
+            TimeSpan pastDueAmount = await monitor.CheckPastDueAsync(_timerName, now, _timezonePacific, _dailySchedule, null);
             Assert.Equal(TimeSpan.Zero, pastDueAmount);
-            Assert.Equal(default(DateTime), monitor.CurrentStatus.Last);
-            Assert.Equal(DateTime.Parse("1/2/2017 00:00", EN_US), monitor.CurrentStatus.Next);
+            Assert.Equal(ScheduleStatus.Never, monitor.CurrentStatus.Last);
+            Assert.Equal(ParseDateTime("1/2/2017 00:00"), monitor.CurrentStatus.Next);
             Assert.Equal(now, monitor.CurrentStatus.LastUpdated);
         }
 
@@ -44,20 +53,20 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Scheduling
         [InlineData(false, true)]
         public async Task CheckPastDue(bool lastSet, bool lastUpdatedSet)
         {
-            DateTime now = DateTime.Parse("1/1/2017 9:35", EN_US);
+            DateTime now = ParseDateTime("1/1/2017 9:35");
 
             ScheduleStatus status = new ScheduleStatus
             {
-                Last = lastSet ? DateTime.Parse("1/1/2017 9:00", EN_US) : default(DateTime),
-                Next = DateTime.Parse("1/1/2017 10:00", EN_US),
-                LastUpdated = lastUpdatedSet ? DateTime.Parse("1/1/2017 9:00", EN_US) : default(DateTime)
+                Last = lastSet ? ParseDateTime("1/1/2017 9:00") : ScheduleStatus.Never,
+                Next = ParseDateTime("1/1/2017 10:00"),
+                LastUpdated = lastUpdatedSet ? ParseDateTime("1/1/2017 9:00") : ScheduleStatus.Never
             };
 
             MockScheduleMonitor monitor = new MockScheduleMonitor();
 
             // Check the schedule (simulating a host start without any schedule change). We should not 
             // update the status.
-            TimeSpan pastDueAmount = await monitor.CheckPastDueAsync(_timerName, now, _hourlySchedule, status);
+            TimeSpan pastDueAmount = await monitor.CheckPastDueAsync(_timerName, now, _timezonePacific, _hourlySchedule, status);
             Assert.Equal(TimeSpan.Zero, pastDueAmount);
             Assert.Null(monitor.CurrentStatus);
         }
@@ -70,18 +79,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Scheduling
         public async Task CheckPastDue_NowPastNext(bool lastSet, bool lastUpdatedSet)
         {
             // Move the time 1 second ahead of 'Next'. We should catch this as past due.
-            DateTime now = DateTime.Parse("1/1/2017 10:00:01", EN_US);
+            DateTime now = ParseDateTime("1/1/2017 10:00:01");
 
             ScheduleStatus status = new ScheduleStatus
             {
-                Last = lastSet ? DateTime.Parse("1/1/2017 9:00", EN_US) : default(DateTime),
-                Next = DateTime.Parse("1/1/2017 10:00", EN_US),
-                LastUpdated = lastUpdatedSet ? DateTime.Parse("1/1/2017 9:00", EN_US) : default(DateTime)
+                Last = lastSet ? ParseDateTime("1/1/2017 9:00") : ScheduleStatus.Never,
+                Next = ParseDateTime("1/1/2017 10:00"),
+                LastUpdated = lastUpdatedSet ? ParseDateTime("1/1/2017 9:00") : ScheduleStatus.Never
             };
 
             MockScheduleMonitor monitor = new MockScheduleMonitor();
 
-            TimeSpan pastDueAmount = await monitor.CheckPastDueAsync(_timerName, now, _hourlySchedule, status);
+            TimeSpan pastDueAmount = await monitor.CheckPastDueAsync(_timerName, now, _timezonePacific, _hourlySchedule, status);
 
             if (lastUpdatedSet || lastSet)
             {
@@ -94,8 +103,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Scheduling
                 //      but we miss it because there is no 'Last' value, which we require to calculate the 'Next'
                 //      value. It also shouldn't register as a schedule change.
                 Assert.Equal(TimeSpan.Zero, pastDueAmount);
-                Assert.Equal(default(DateTime), monitor.CurrentStatus.Last);
-                Assert.Equal(DateTime.Parse("1/1/2017 11:00", EN_US), monitor.CurrentStatus.Next);
+                Assert.Equal(ScheduleStatus.Never, monitor.CurrentStatus.Last);
+                Assert.Equal(ParseDateTime("1/1/2017 11:00"), monitor.CurrentStatus.Next);
                 Assert.Equal(now, monitor.CurrentStatus.LastUpdated);
             }
         }
@@ -107,29 +116,29 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Scheduling
         [InlineData(false, true)]
         private async Task CheckPastDue_ScheduleChange_Longer(bool lastSet, bool lastUpdatedSet)
         {
-            DateTime now = DateTime.Parse("1/1/2017 9:35", EN_US);
+            DateTime now = ParseDateTime("1/1/2017 9:35");
 
             ScheduleStatus status = new ScheduleStatus
             {
-                Last = lastSet ? DateTime.Parse("1/1/2017 9:00", EN_US) : default(DateTime),
-                Next = DateTime.Parse("1/1/2017 10:00", EN_US),
-                LastUpdated = lastUpdatedSet ? DateTime.Parse("1/1/2017 9:00", EN_US) : default(DateTime)
+                Last = lastSet ? ParseDateTime("1/1/2017 9:00") : ScheduleStatus.Never,
+                Next = ParseDateTime("1/1/2017 10:00"),
+                LastUpdated = lastUpdatedSet ? ParseDateTime("1/1/2017 9:00") : ScheduleStatus.Never
             };
 
             MockScheduleMonitor monitor = new MockScheduleMonitor();
 
             // change to daily schedule (status is hourly)
-            TimeSpan pastDueAmount = await monitor.CheckPastDueAsync(_timerName, now, _dailySchedule, status);
+            TimeSpan pastDueAmount = await monitor.CheckPastDueAsync(_timerName, now, _timezonePacific, _dailySchedule, status);
 
             Assert.Equal(TimeSpan.Zero, pastDueAmount);
 
-            DateTime expectedNext = DateTime.Parse("1/2/2017 0:00", EN_US);
-            Assert.Equal(default(DateTime), monitor.CurrentStatus.Last);
+            DateTime expectedNext = ParseDateTime("1/2/2017 0:00");
+            Assert.Equal(ScheduleStatus.Never, monitor.CurrentStatus.Last);
             Assert.Equal(expectedNext, monitor.CurrentStatus.Next);
 
             if (lastUpdatedSet || lastSet)
             {
-                Assert.Equal(DateTime.Parse("1/1/2017 9:00", EN_US), monitor.CurrentStatus.LastUpdated);
+                Assert.Equal(ParseDateTime("1/1/2017 9:00"), monitor.CurrentStatus.LastUpdated);
             }
             else
             {
@@ -146,27 +155,27 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Scheduling
         [InlineData(false, true)]
         private async Task CheckPastDue_ScheduleChange_Shorter(bool lastSet, bool lastUpdatedSet)
         {
-            DateTime now = DateTime.Parse("1/1/2017 9:35", EN_US);
+            DateTime now = ParseDateTime("1/1/2017 9:35");
 
             ScheduleStatus status = new ScheduleStatus
             {
-                Last = lastSet ? DateTime.Parse("1/1/2017 9:00", EN_US) : default(DateTime),
-                Next = DateTime.Parse("1/1/2017 10:00", EN_US),
-                LastUpdated = lastUpdatedSet ? DateTime.Parse("1/1/2017 9:00", EN_US) : default(DateTime)
+                Last = lastSet ? ParseDateTime("1/1/2017 9:00") : ScheduleStatus.Never,
+                Next = ParseDateTime("1/1/2017 10:00"),
+                LastUpdated = lastUpdatedSet ? ParseDateTime("1/1/2017 9:00") : ScheduleStatus.Never
             };
 
             MockScheduleMonitor monitor = new MockScheduleMonitor();
 
             // Change to half-hour schedule (status is hourly). 
             // The 'Next' time calculated by this could be in the past -- so it will be seen as past due
-            TimeSpan pastDueAmount = await monitor.CheckPastDueAsync(_timerName, now, _halfHourlySchedule, status);
+            TimeSpan pastDueAmount = await monitor.CheckPastDueAsync(_timerName, now, _timezonePacific, _halfHourlySchedule, status);
 
             if (lastUpdatedSet || lastSet)
             {
                 // Because the new time is in the past, we re-calculate it to be the next invocation from 'now'.
                 Assert.Equal(TimeSpan.Zero, pastDueAmount);
-                Assert.Equal(default(DateTime), monitor.CurrentStatus.Last);
-                Assert.Equal(DateTime.Parse("1/1/2017 10:00", EN_US), monitor.CurrentStatus.Next);
+                Assert.Equal(ScheduleStatus.Never, monitor.CurrentStatus.Last);
+                Assert.Equal(ParseDateTime("1/1/2017 10:00"), monitor.CurrentStatus.Next);
                 Assert.Equal(now, monitor.CurrentStatus.LastUpdated);
             }
             else

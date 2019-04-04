@@ -13,6 +13,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers.Scheduling
 {
     public class FileSystemScheduleMonitorTests
     {
+        private static readonly TimeZoneInfo _timezonePacific = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
         private FileSystemScheduleMonitor _monitor;
         private string _testTimerName;
         private string _statusRoot;
@@ -83,8 +84,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers.Scheduling
         [Fact]
         public async Task UpdateAsync_WritesStatusToFile()
         {
-            DateTime now = DateTime.Now;
-            DateTime expectedNext = DateTime.Now + TimeSpan.FromMinutes(1);
+            DateTime now = DateTime.UtcNow;
+            DateTime expectedNext = DateTime.UtcNow + TimeSpan.FromMinutes(1);
 
             File.Delete(_statusFile);
             Assert.False(File.Exists(_statusFile));
@@ -117,15 +118,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers.Scheduling
         {
             File.Delete(_statusFile);
             Assert.False(File.Exists(_statusFile));
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.UtcNow;
             DateTime next = now + TimeSpan.FromDays(5);
 
             Mock<TimerSchedule> mockSchedule = new Mock<TimerSchedule>(MockBehavior.Strict);
-            mockSchedule.Setup(p => p.GetNextOccurrence(It.IsAny<DateTime>())).Returns(next);
+            mockSchedule.Setup(p => p.GetNextOccurrence(It.IsAny<DateTime>(), It.IsAny<TimeZoneInfo>())).Returns(next);
 
-            TimeSpan pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, mockSchedule.Object, null);
+            TimeSpan pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, _timezonePacific, mockSchedule.Object, null);
             Assert.True(File.Exists(_statusFile));
-            VerifyScheduleStatus(default(DateTime), next, now);
+            VerifyScheduleStatus(ScheduleStatus.Never, next, now);
             Assert.Equal(TimeSpan.Zero, pastDueAmount);
         }
 
@@ -133,7 +134,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers.Scheduling
         public async Task CheckPastDueAsync_ReturnsExpectedResult()
         {
             Mock<TimerSchedule> mockSchedule = new Mock<TimerSchedule>(MockBehavior.Strict);
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.UtcNow;
             DateTime next = now + TimeSpan.FromDays(1);
             ScheduleStatus status = new ScheduleStatus
             {
@@ -141,20 +142,20 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers.Scheduling
                 Next = next
             };
 
-            mockSchedule.Setup(p => p.GetNextOccurrence(It.IsAny<DateTime>())).Returns(next);
-            TimeSpan pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, mockSchedule.Object, status);
+            mockSchedule.Setup(p => p.GetNextOccurrence(It.IsAny<DateTime>(), It.IsAny<TimeZoneInfo>())).Returns(next);
+            TimeSpan pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, _timezonePacific, mockSchedule.Object, status);
             Assert.Equal(TimeSpan.Zero, pastDueAmount);
 
             now = now + TimeSpan.FromHours(23);
-            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, mockSchedule.Object, status);
+            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, _timezonePacific, mockSchedule.Object, status);
             Assert.Equal(TimeSpan.Zero, pastDueAmount);
 
             now = now + TimeSpan.FromHours(1);
-            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, mockSchedule.Object, status);
+            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, _timezonePacific, mockSchedule.Object, status);
             Assert.Equal(TimeSpan.Zero, pastDueAmount);
 
             now = now + TimeSpan.FromHours(1);
-            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, mockSchedule.Object, status);
+            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, _timezonePacific, mockSchedule.Object, status);
             Assert.Equal(TimeSpan.FromHours(1), pastDueAmount);
         }
 
@@ -162,7 +163,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers.Scheduling
         public async Task CheckPastDueAsync_ScheduleUpdate_UpdatesStatusFile()
         {
             Mock<TimerSchedule> mockSchedule = new Mock<TimerSchedule>(MockBehavior.Strict);
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.UtcNow;
             DateTime next = now + TimeSpan.FromDays(2);
             ScheduleStatus status = new ScheduleStatus
             {
@@ -172,30 +173,30 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers.Scheduling
             };
             await _monitor.UpdateStatusAsync(_testTimerName, status);
 
-            mockSchedule.Setup(p => p.GetNextOccurrence(It.IsAny<DateTime>())).Returns(next);
-            TimeSpan pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, mockSchedule.Object, status);
+            mockSchedule.Setup(p => p.GetNextOccurrence(It.IsAny<DateTime>(), It.IsAny<TimeZoneInfo>())).Returns(next);
+            TimeSpan pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, _timezonePacific, mockSchedule.Object, status);
             Assert.Equal(TimeSpan.Zero, pastDueAmount);
 
             // now adjust the schedule
             DateTime adjustedNext = next - TimeSpan.FromDays(1);
-            mockSchedule.Setup(p => p.GetNextOccurrence(It.IsAny<DateTime>())).Returns(adjustedNext);
-            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, mockSchedule.Object, status);
+            mockSchedule.Setup(p => p.GetNextOccurrence(It.IsAny<DateTime>(), It.IsAny<TimeZoneInfo>())).Returns(adjustedNext);
+            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, _timezonePacific, mockSchedule.Object, status);
             Assert.Equal(TimeSpan.Zero, pastDueAmount);
             ScheduleStatus updatedStatus = await _monitor.GetStatusAsync(_testTimerName);
-            Assert.Equal(default(DateTime), updatedStatus.Last);
+            Assert.Equal(ScheduleStatus.Never, updatedStatus.Last);
             Assert.Equal(adjustedNext, updatedStatus.Next);
             Assert.Equal(now, updatedStatus.LastUpdated);
 
             now = now + TimeSpan.FromHours(23);
-            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, mockSchedule.Object, status);
+            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, _timezonePacific, mockSchedule.Object, status);
             Assert.Equal(TimeSpan.Zero, pastDueAmount);
 
             now = now + TimeSpan.FromHours(1);
-            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, mockSchedule.Object, status);
+            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, _timezonePacific, mockSchedule.Object, status);
             Assert.Equal(TimeSpan.Zero, pastDueAmount);
 
             now = now + TimeSpan.FromHours(1);
-            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, mockSchedule.Object, status);
+            pastDueAmount = await _monitor.CheckPastDueAsync(_testTimerName, now, _timezonePacific, mockSchedule.Object, status);
             Assert.Equal(TimeSpan.FromHours(1), pastDueAmount);
         }
 

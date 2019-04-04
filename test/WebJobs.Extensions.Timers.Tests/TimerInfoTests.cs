@@ -10,23 +10,25 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers
 {
     public class TimerInfoTests : IClassFixture<CultureFixture.EnUs>
     {
+        private static readonly TimeZoneInfo _timezonePacific = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+
         [Fact]
         public void ScheduleStatus_ReturnsExpectedValue()
         {
             TimerSchedule schedule = new ConstantSchedule(TimeSpan.FromDays(1));
-            TimerInfo timerInfo = new TimerInfo(schedule, null);
+            TimerInfo timerInfo = new TimerInfo(_timezonePacific, schedule, null);
             Assert.Null(timerInfo.ScheduleStatus);
 
             ScheduleStatus scheduleStatus = new ScheduleStatus();
-            timerInfo = new TimerInfo(schedule, scheduleStatus);
+            timerInfo = new TimerInfo(_timezonePacific, schedule, scheduleStatus);
             Assert.Same(scheduleStatus, timerInfo.ScheduleStatus);
         }
 
         [Fact]
         public void FormatNextOccurrences_ReturnsExpectedString()
         {
-            DateTime now = new DateTime(2015, 9, 16, 10, 30, 00);
-            TimerInfo timerInfo = new TimerInfo(new CronSchedule("0 0 * * * *"), null);
+            DateTime now = new DateTime(2015, 9, 16, 10, 30, 00, DateTimeKind.Utc);
+            TimerInfo timerInfo = new TimerInfo(_timezonePacific, new CronSchedule("0 0 * * * *"), null);
             string result = timerInfo.FormatNextOccurrences(10, now);
 
             string expected =

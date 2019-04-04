@@ -45,7 +45,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Bindings
             Assert.Same(status, timerInfo.ScheduleStatus);
 
             // when we pass in a TimerInfo that is used
-            TimerInfo expected = new TimerInfo(schedule, status);
+            TimerInfo expected = new TimerInfo(TimeZoneInfo.Utc, schedule, status);
             triggerData = (TriggerData)(await binding.BindAsync(expected, context));
             timerInfo = (TimerInfo)(await triggerData.ValueProvider.GetValueAsync());
             Assert.Same(expected, timerInfo);

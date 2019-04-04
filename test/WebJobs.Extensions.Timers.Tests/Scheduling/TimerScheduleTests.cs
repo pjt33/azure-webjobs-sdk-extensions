@@ -11,6 +11,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Scheduling
 {
     public class TimerScheduleTests
     {
+        private static readonly TimeZoneInfo _timezonePacific = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+
         [Fact]
         public void Create_CronSchedule_CreatesExpectedSchedule()
         {
@@ -19,8 +21,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Scheduling
             CronSchedule schedule = (CronSchedule)TimerSchedule.Create(attribute, nameResolver);
             Assert.False(attribute.UseMonitor);
 
-            DateTime now = new DateTime(2015, 5, 22, 9, 45, 00);
-            DateTime nextOccurrence = schedule.GetNextOccurrence(now);
+            DateTime now = TimeZoneInfo.ConvertTimeToUtc(new DateTime(2015, 5, 22, 9, 45, 00), _timezonePacific);
+            DateTime nextOccurrence = schedule.GetNextOccurrence(now, _timezonePacific);
             Assert.Equal(new TimeSpan(0, 0, 15), nextOccurrence - now);
 
             // For schedules occuring on an interval greater than a minute, we expect
@@ -44,8 +46,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Scheduling
             ConstantSchedule schedule = (ConstantSchedule)TimerSchedule.Create(attribute, nameResolver);
             Assert.False(attribute.UseMonitor);
 
-            DateTime now = new DateTime(2015, 5, 22, 9, 45, 00);
-            DateTime nextOccurrence = schedule.GetNextOccurrence(now);
+            DateTime now = TimeZoneInfo.ConvertTimeToUtc(new DateTime(2015, 5, 22, 9, 45, 00), _timezonePacific);
+            DateTime nextOccurrence = schedule.GetNextOccurrence(now, _timezonePacific);
             Assert.Equal(new TimeSpan(0, 0, 15), nextOccurrence - now);
 
             // For schedules occuring on an interval greater than a minute, we expect
@@ -79,8 +81,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Scheduling
             INameResolver nameResolver = new TestNameResolver();
             ConstantSchedule schedule = (ConstantSchedule)TimerSchedule.Create(attribute, nameResolver);
 
-            DateTime now = new DateTime(2015, 5, 22, 9, 45, 00);
-            var occurrences = schedule.GetNextOccurrences(5, now);
+            DateTime now = TimeZoneInfo.ConvertTimeToUtc(new DateTime(2015, 5, 22, 9, 45, 00), _timezonePacific);
+            var occurrences = schedule.GetNextOccurrences(5, now, _timezonePacific);
 
             for (int i = 0; i < 4; i++)
             {
@@ -114,8 +116,8 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Scheduling
             CronSchedule schedule = (CronSchedule)TimerSchedule.Create(attribute, nameResolver);
             Assert.False(attribute.UseMonitor);
 
-            DateTime now = new DateTime(2015, 5, 22, 9, 45, 00);
-            DateTime nextOccurrence = schedule.GetNextOccurrence(now);
+            DateTime now = TimeZoneInfo.ConvertTimeToUtc(new DateTime(2015, 5, 22, 9, 45, 00), _timezonePacific);
+            DateTime nextOccurrence = schedule.GetNextOccurrence(now, _timezonePacific);
             Assert.Equal(new TimeSpan(0, 0, 15), nextOccurrence - now);
         }
 
@@ -133,11 +135,9 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Extensions.Timers.Scheduling
 
         public class CustomSchedule : TimerSchedule
         {
-            public override bool AdjustForDST => true;
-
-            public override DateTime GetNextOccurrence(DateTime now)
+            public override DateTime GetNextOccurrence(DateTime nowUtc, TimeZoneInfo tz)
             {
-                return new DateTime(2015, 5, 22, 9, 45, 00);
+                return TimeZoneInfo.ConvertTimeToUtc(new DateTime(2015, 5, 22, 9, 45, 00), tz);
             }
         }
     }

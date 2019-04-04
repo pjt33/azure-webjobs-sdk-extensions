@@ -9,13 +9,15 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers.Scheduling
 {
     public class CronScheduleTests
     {
+        private static readonly TimeZoneInfo _timezonePacific = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+
         [Fact]
         public void GetNextOccurrence_NowEqualToNext_ReturnsCorrectValue()
         {
             CronSchedule schedule = new CronSchedule("0 * * * * *");
 
-            var now = schedule.GetNextOccurrence(DateTime.Now);
-            var next = schedule.GetNextOccurrence(now);
+            var now = schedule.GetNextOccurrence(DateTime.UtcNow, _timezonePacific);
+            var next = schedule.GetNextOccurrence(now, _timezonePacific);
 
             Assert.True(next > now);
         }
@@ -26,16 +28,17 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers.Scheduling
             // 11:59AM on Mondays, Tuesdays, Wednesdays, Thursdays and Fridays
             CronSchedule schedule = new CronSchedule("0 59 11 * * 1-5");
 
-            DateTime now = new DateTime(2015, 5, 23, 9, 0, 0);
+            DateTime nowUtc = TimeZoneInfo.ConvertTimeToUtc(new DateTime(2015, 5, 23, 9, 0, 0), _timezonePacific);
 
             TimeSpan expectedTime = new TimeSpan(11, 59, 0);
             for (int i = 1; i <= 5; i++)
             {
-                DateTime nextOccurrence = schedule.GetNextOccurrence(now);
+                DateTime nextOccurrenceUtc = schedule.GetNextOccurrence(nowUtc, _timezonePacific);
+                DateTime nextOccurrence = TimeZoneInfo.ConvertTimeFromUtc(nextOccurrenceUtc, _timezonePacific);
 
                 Assert.Equal((DayOfWeek)i, nextOccurrence.DayOfWeek);
                 Assert.Equal(expectedTime, nextOccurrence.TimeOfDay);
-                now = nextOccurrence + TimeSpan.FromSeconds(1);
+                nowUtc = nextOccurrenceUtc + TimeSpan.FromSeconds(1);
             }
         }
 

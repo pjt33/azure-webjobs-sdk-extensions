@@ -9,16 +9,18 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers.Scheduling
 {
     public class ConstantScheduleTests
     {
+        private static readonly TimeZoneInfo _timezonePacific = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+
         [Fact]
         public void GetNextOccurrence_ReturnsExpected()
         {
             ConstantSchedule schedule = new ConstantSchedule(TimeSpan.FromHours(1));
 
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.UtcNow;
 
             for (int i = 0; i < 10; i++)
             {
-                DateTime nextOccurrence = schedule.GetNextOccurrence(now);
+                DateTime nextOccurrence = schedule.GetNextOccurrence(now, _timezonePacific);
                 Assert.Equal(new TimeSpan(1, 0, 0), nextOccurrence - now);
 
                 now = nextOccurrence;
@@ -30,19 +32,19 @@ namespace Microsoft.Azure.WebJobs.Extensions.Tests.Timers.Scheduling
         {
             ConstantSchedule schedule = new ConstantSchedule(TimeSpan.FromSeconds(30));
 
-            DateTime now = DateTime.Now;
-            DateTime nextOccurrence = schedule.GetNextOccurrence(now);
+            DateTime now = DateTime.UtcNow;
+            DateTime nextOccurrence = schedule.GetNextOccurrence(now, _timezonePacific);
             Assert.Equal(new TimeSpan(0, 0, 30), nextOccurrence - now);
             now = nextOccurrence;
             
             // next interval is overidden
             schedule.SetNextInterval(new TimeSpan(1, 0, 0));
-            nextOccurrence = schedule.GetNextOccurrence(now);
+            nextOccurrence = schedule.GetNextOccurrence(now, _timezonePacific);
             Assert.Equal(new TimeSpan(1, 0, 0), nextOccurrence - now);
             now = nextOccurrence;
 
             // subsequent intervals are not
-            nextOccurrence = schedule.GetNextOccurrence(now);
+            nextOccurrence = schedule.GetNextOccurrence(now, _timezonePacific);
             Assert.Equal(new TimeSpan(0, 0, 30), nextOccurrence - now);
             now = nextOccurrence;
         }

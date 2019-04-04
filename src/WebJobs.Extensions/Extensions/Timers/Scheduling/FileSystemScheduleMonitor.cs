@@ -67,6 +67,7 @@ namespace Microsoft.Azure.WebJobs.Extensions.Timers
 
             JsonSerializerSettings settings = new JsonSerializerSettings
             {
+                DateTimeZoneHandling = DateTimeZoneHandling.Utc,
                 DateFormatHandling = DateFormatHandling.IsoDateFormat
             };
             _serializer = JsonSerializer.Create(settings);
